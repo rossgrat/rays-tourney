@@ -4,7 +4,7 @@
     <button type="submit" class="primary">Add Player</button>
 </form>
 <br>
-<button type="submit" class="primary">Generate Games</button>
+<button type="submit" class="primary" (click)="runTest()">Generate Games</button>
 <br>
 <ul>
     <li *ngFor="let name of namesList; index as i">{{i}} {{name}}</li>

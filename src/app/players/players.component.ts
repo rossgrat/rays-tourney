@@ -1,9 +1,10 @@
-import { Component } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
+import { Component } from '@angular/core'
+import { CommonModule } from '@angular/common'
+import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms'
+import {Run} from './tourney-engine'
 
 @Component({
-  selector: 'app-Players',
+  selector: 'app-players',
   standalone: true,
   imports: [
     CommonModule,
@@ -12,6 +13,7 @@ import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
   templateUrl: './players.component.html'
 })
 export class PlayersComponent {
+
   namesList: string[] = []
 
   addPlayersForm = new FormGroup({
@@ -19,7 +21,13 @@ export class PlayersComponent {
   })
 
   addPlayers() {
-    this.namesList.unshift(this.addPlayersForm.value.name ?? 'New Player')
+    let newName: string = this.addPlayersForm.value.name ?? 'New Player'
+    this.namesList.unshift(newName)
     this.addPlayersForm.reset()
+  }
+
+  runTest() {
+    console.log("STARTING RUN")
+    Run()
   }
 }
