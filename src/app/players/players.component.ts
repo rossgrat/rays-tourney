@@ -1,7 +1,7 @@
 import { Component } from '@angular/core'
 import { CommonModule } from '@angular/common'
 import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms'
-import {Run} from './tourney-engine'
+import {Run} from '../tourney-engine'
 
 @Component({
   selector: 'app-players',
