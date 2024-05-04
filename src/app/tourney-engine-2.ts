@@ -45,6 +45,9 @@ function getUnusedPlayers(numPlayers: number, usedPlayers: Set<number>): number[
 }
 
 export function GenRounds(numPlayers: number): Round[] {
+    if (numPlayers < 4) {
+        return []
+    }
     let usedPartners: Set<number>[] = []
     for (let i = 0; i < numPlayers; i ++) {
         usedPartners.push(new Set())
@@ -81,7 +84,23 @@ export function GenRounds(numPlayers: number): Round[] {
 
 }
 
+
+function countByes(numPlayers: number, rounds: Round[]) {
+    let byes: number[] = new Array(numPlayers).fill(0)
+    
+    for (let round of rounds) {
+        for (let player of round.ByePlayers) {
+            byes[player] = byes[player] + 1
+        }
+    }
+    console.log("BYES: ",byes)
+}
+
 export function Run() {
-    let rounds = GenRounds(27)
-    console.log(rounds)
+    for (let i = 4; i < 30; i++) {
+        console.log("NUM PLAYERS: ", i)
+        let rounds = GenRounds(i)
+        countByes(i, rounds)
+        console.log(rounds)
+    }
 }
