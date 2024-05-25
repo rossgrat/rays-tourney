@@ -1,11 +1,5 @@
 import { Routes } from '@angular/router';
 import { PlayersComponent } from './players/players.component';
+import { TourneyComponent } from './tourney/tourney.component';
 
-export const routes: Routes = [
-    {
-        path: '',
-        component: PlayersComponent,
-        title: 'Players'
-
-    }
-]
+export const routes: Routes = []

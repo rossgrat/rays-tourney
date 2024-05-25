@@ -1,7 +1,6 @@
-import { Component } from '@angular/core'
+import { Component, EventEmitter, Output, Input } from '@angular/core'
 import { CommonModule } from '@angular/common'
 import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms'
-import {Run} from '../tourney-engine-2'
 
 @Component({
   selector: 'app-players',
@@ -10,24 +9,42 @@ import {Run} from '../tourney-engine-2'
     CommonModule,
     ReactiveFormsModule
   ],
-  templateUrl: './players.component.html'
+  templateUrl: './players.component.html',
+  styleUrl: '../../styles.css'
 })
 export class PlayersComponent {
 
-  namesList: string[] = []
+  @Input() existingPlayers: string[] = []
+  @Output() sendPlayers = new EventEmitter<string[]>()
 
+  players: string[] = []
   addPlayersForm = new FormGroup({
     name: new FormControl('')
   })
 
-  addPlayers() {
-    let newName: string = this.addPlayersForm.value.name ?? 'New Player'
-    this.namesList.unshift(newName)
+  ngOnInit() {
+    this.players = this.existingPlayers
+  }
+
+  addPlayer() {
+    let newName = this.addPlayersForm.value.name
+    if (newName === undefined || newName === null || newName === "") {
+      newName = "New Player"
+    } else {
+      if (newName.length > 20) {
+          alert("Names must be 20 characters or less.")
+          return
+      }
+    }
+    this.players.unshift(newName)
     this.addPlayersForm.reset()
   }
 
-  runTest() {
-    console.log("STARTING RUN")
-    Run()
+  removePlayer(i: number) {
+    this.players.splice(i, 1)
+  }
+
+  finishedAddingPlayers() {
+    this.sendPlayers.emit(this.players)
   }
 }

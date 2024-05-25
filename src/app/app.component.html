@@ -1,10 +1,23 @@
-<main>
+<main class="p-5 container">
   <a [routerLink]="['/']">
-    <header class="brand-name">
-      <h1>Ray O' Shea's Euchre Tourney App</h1>
+    <header>
+      <h1 class="text-2xl font-bold">Ray O' Shea's Euchre Tourney App</h1>
     </header>
   </a>
-  <section class="content">
+  <section>
+    <app-players 
+      *ngIf="showAddPlayers"
+      [existingPlayers]="players"
+      (sendPlayers)="onReceivedPlayers($event)"
+    >
+    </app-players>
+    <app-tourney 
+      *ngIf="!showAddPlayers"
+      [tourney]="tourney"
+      [players]="players"
+      (sendRestart)="onRecievedRestart($event)"
+    >
+    </app-tourney>
     <router-outlet></router-outlet>
   </section>
 </main>

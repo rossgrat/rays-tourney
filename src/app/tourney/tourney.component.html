@@ -1,0 +1,24 @@
+<section class="p-5 container font-mono md:w-5/6 lg:w-2/3 xl:w-1/2">
+    <p  *ngIf="tourney.Rounds.length === 0">Not enough players for a tournament. Add 4 or more players to start a tournament.</p>    
+    <div class="my-4"*ngFor="let round of tourney.Rounds; index as r">
+        <h2 class="text-lg font-semibold">Round {{r}}</h2>
+        <span *ngIf="round.ByePlayers.length > 0">Byes:</span>
+        <span class="ml-3" *ngFor="let player of round.ByePlayers">{{players[player]}}</span>
+        <div class="flex flex-col">
+            <div class="m-3 outline outline-2 rounded grid grid-cols-7" *ngFor="let table of round.Tables">
+                <div class="mx-2 col-span-3">
+                    <p>{{players.at(table.Teams[0][0])}}</p>
+                    <p>{{players.at(table.Teams[0][1])}}</p>
+                </div>
+                <div class="mx-2 font-bold">
+                    <p>vs.</p>
+                </div>
+                <div class="mx-2 text-end col-span-3">
+                    <p>{{players.at(table.Teams[1][0])}}</p>
+                    <p>{{players.at(table.Teams[1][1])}}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    <button class="justify-center p-3 mt-10 w-full outline outline-2 bg-red-300 hover:bg-red-400 active:bg-red-500" type="submit" (click)="endTournament()">End Tournament</button>
+</section>

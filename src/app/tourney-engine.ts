@@ -1,91 +1,58 @@
-
-interface GameInputs {
-    NumPlayers: number
-    PlayersPerTeam: number
-    TeamsPerTable: number
+export interface Table {
+    Teams: number[][] // [Team][Player]
 }
 
-interface GameData {
-    NumTables: number
-    NumRounds: number
-    ExtraPlayers: number
-    ByeStart: number
-    Teams: number[][]
-    UsedTeams: Set<number>
-}
-
-
-interface Table {
-    Teams: number[] // [Team]
-}
-
-interface Round {
+export interface Round {
     ByePlayers: number[]
     UsedPlayers: Set<number>
     Tables: Table[]
 }
 
-interface Game {
+export interface Tourney {
     Rounds: Round[]
+    Byes: number[]
 }
 
- // Utility functions
-function copyArray(arr: number[]): number[] {
-    let newArr: number[] = []
-    for (let i = 0; i < arr.length; i++) {
-        newArr.push(arr[i])
-    }
-    return newArr
+export interface TourneyInputs {
+    NumPlayers: number
+    NumRounds: number
+    NumTables: number
+    Mode: GameMode
 }
 
-function generate(n: number, k: number, start: number, arr: number[], combs: number[][]) {
-    if (arr.length == k) {
-        combs.push(copyArray(arr))
-        return
-    }
-    
-    let need: number = k - arr.length
-    let remain: number = n - start
-    let available: number = remain - need
-    for (let val: number = start; val <= start + available; val++) {
-        arr.push(val)
-        generate(n, k, val + 1, arr, combs)
-        arr.pop()
-    }
+export enum GameMode {
+    Custom = 1,
+    MaxRounds,
+    EqualByes,
 }
 
-export function GenCombinations(gi: GameInputs): number[][] {
-    let combs: number[][] = []
-    let arr: number[] = []
-    generate(gi.NumPlayers, gi.PlayersPerTeam, 0, arr, combs)
-    console.log(combs)
-    return combs
-}
-
-// A team is valid if:
-// - No player on any team currently has a byte
-// - No player on any team is also a player on another different team
-function checkPlayersValid(team: number[], usedPlayers: Set<number>): boolean {
-    for (let p of team) {
-        if (usedPlayers.has(p)) {
-            return false
+// Attempt to find the first player and partner combination where
+// 1. The partner is not the player
+// 2. The player and partner have not yet been on a team togetther
+// 3. The player and partner are not already on some other team in the round
+//
+// Iterate over the array of ordered players when attempting to seat a player
+// and their partner.
+function selectTeam(numPlayers: number, orderedPlayers: number[], usedPartners: Set<number>[], usedPlayers: Set<number>): number[] {
+    for (let player of orderedPlayers) {
+        if ((!usedPlayers.has(player)) && (usedPartners[player].size < numPlayers)) {
+            for (let partner of orderedPlayers) {
+                if ((player != partner) && !usedPartners[player].has(partner) && !usedPlayers.has(partner)) {
+                    usedPartners[player].add(partner)
+                    usedPartners[partner].add(player)
+                    usedPlayers.add(player)
+                    usedPlayers.add(partner)
+                    return [player, partner]
+                }
+            }
         }
     }
-    return true
+    return []
 }
 
-
-function addByePlayersToSet(gi: GameInputs, gd: GameData, usedPlayers: Set<number>){
-    let count = 0
-    for(let i = gd.ByeStart; count < gd.ExtraPlayers; i = (i + 1) % gi.NumPlayers) {
-        usedPlayers.add(i)
-        count++
-    }
-}
-
-function getUnusedPlayers(gi: GameInputs, usedPlayers: Set<number>): number[] {
+function getUnusedPlayers(numPlayers: number, usedPlayers: Set<number>): number[] {
     let arr : number[] = []
-    for (let i = 0; i < gi.NumPlayers; i ++) {
+    for (let i = 0; i < numPlayers; i ++) {
         if (!usedPlayers.has(i)) {
             arr.push(i)
         }
@@ -93,148 +60,109 @@ function getUnusedPlayers(gi: GameInputs, usedPlayers: Set<number>): number[] {
     return arr
 }
 
-function genGameData(gi: GameInputs, teams: number[][]): GameData {
-    let gd: GameData = {
-        NumTables: 0,
-        NumRounds: 0,
-        ExtraPlayers: 0,
-        ByeStart: 0,
-        Teams: teams,
-        UsedTeams: new Set()
-    }
-    gd.NumTables = Math.floor(gi.NumPlayers / (gi.PlayersPerTeam * gi.TeamsPerTable))
-    gd.NumRounds = Math.floor(teams.length / gi.PlayersPerTeam / gd.NumTables)
-    gd.ExtraPlayers = gi.NumPlayers % (gi.PlayersPerTeam * gi.TeamsPerTable * gd.NumTables)
 
-    if (gd.ExtraPlayers > 0) {
-        if (gi.NumPlayers % 2 == 0) {
-            gd.NumRounds = gi.NumPlayers / 2
-        } else {
-            gd.NumRounds = gi.NumPlayers
+export function CreateTourney(ti: TourneyInputs): Tourney {
+    // A minimum of 4 players are required for euchre
+    if (ti.NumPlayers < 4) {
+        let empty: Tourney = {
+            Rounds: [],
+            Byes: []
         }
+        return empty
     }
-    return gd
-}
-
-var count: number = 0
-
-function seatTeams(gi: GameInputs, gd: GameData, table: Table, round: Round, game: Game): boolean {
-    count = count + 1
-    if (count == 5000) {
-        throw console.error();
-        
+    // Create a set for each player of other players they have partnered with
+    let usedPartners: Set<number>[] = []
+    for (let i = 0; i < ti.NumPlayers; i ++) {
+        usedPartners.push(new Set())
     }
-    if (game.Rounds.length == gd.NumRounds) {
-        console.log("DONE")
-        return true
-    }
-    if (round.Tables.length == gd.NumTables) {
-        round.ByePlayers = getUnusedPlayers(gi, round.UsedPlayers)
-        game.Rounds.push(round)
 
-        console.log("ROUND: ", game.Rounds.length, round.Tables.length, table.Teams.length)
-        console.log(round)
-        let newRound: Round = {
-            ByePlayers: [],
-            Tables: [],
-            UsedPlayers: new Set()
-        }
-        if (seatTeams(gi, gd, table, newRound, game)) {
-            return true
-        }
-        console.log("BACKTRACK ROUND: ", game.Rounds.length, round.Tables.length, table.Teams.length)
-        game.Rounds.pop()
-        return false
-    }
-    if (table.Teams.length == gi.TeamsPerTable) {
-        round.Tables.push(table)
+    const playersPerTeam = 2 
+    const teamsPerTable = 2
 
-        console.log("TABLE: ", game.Rounds.length, round.Tables.length, table.Teams.length)
-        console.log(gd.UsedTeams)
-        console.log(round.UsedPlayers)
-        //console.log(round)
-
-        let newTable: Table = {
-            Teams: []
-        }
-        if (seatTeams(gi, gd, newTable, round, game)) {
-            return true
-        }
-        console.log("BACKTRACK TABLE: ", game.Rounds.length, round.Tables.length, table.Teams.length)
-        console.log(gd.UsedTeams)
-        console.log(round.UsedPlayers)
-        // Backtrack if not done
-        round.Tables.pop()
-        return false
-    }
-    console.log("CHECK TEAMS")
-    console.log(gd.UsedTeams)
-    console.log(round.UsedPlayers)
-    for (let teamNum = 0; teamNum < gd.Teams.length; teamNum++) {
-        let team = gd.Teams[teamNum]
-        if (checkPlayersValid(team, round.UsedPlayers) && !gd.UsedTeams.has(teamNum)) {
-
-            table.Teams.push(teamNum)
-            gd.UsedTeams.add(teamNum)
-            for (let p of team) {
-                round.UsedPlayers.add(p)
+    // We currently recognize two game modes
+    // MaxRounds: Generate the maximum number of rounds using the maximum number of tables
+    // Custom: Use inputs for numRounds and numTables to generate rounds
+    switch (ti.Mode) {
+        case GameMode.MaxRounds:
+            ti.NumTables = Math.floor(ti.NumPlayers / (playersPerTeam * teamsPerTable))
+            ti.NumRounds = Number.MAX_SAFE_INTEGER
+            break
+            
+        case GameMode.Custom:
+            if (ti.NumRounds === -1) {
+                ti.NumRounds = Number.MAX_SAFE_INTEGER
             }
-
-            console.log("TEAMS: ", game.Rounds.length, round.Tables.length, table.Teams.length)
-            console.log("ADDED: ", teamNum)
-            console.log(gd.UsedTeams)
-            console.log(round.UsedPlayers)
-            //console.log(table)
-
-            if (seatTeams(gi, gd, table, round, game)) {
-                return true
+            if (ti.NumTables === -1) {
+                ti.NumTables = Math.floor(ti.NumPlayers / (playersPerTeam * teamsPerTable))
             }
-            console.log("BACKTRACK TEAMS: ", game.Rounds.length, round.Tables.length, table.Teams.length)
-            console.log("REMOVED: ", teamNum)
-            console.log(gd.UsedTeams)
-            console.log(round.UsedPlayers)
-
-            // Backtrack if not done
-            table.Teams.pop()
-            gd.UsedTeams.delete(teamNum)
-            for (let p of team) {
-                round.UsedPlayers.delete(p)
-            }
-        }
+            break
     }
-    return false
-}
 
-export function GenRounds(gi: GameInputs, gd: GameData): Game {
-    let game: Game = {
-        Rounds: []
+    // Create an array of all player IDs
+    let playerByesDesc: number[] = []
+    for(let i = 0; i < ti.NumPlayers; i++) {
+        playerByesDesc[i] = i
     }
-    let round: Round = {
-        ByePlayers: [],
+
+    let tourney: Tourney = {
+        Rounds: [],
+        Byes: new Array(ti.NumPlayers).fill(0)
+    }
+    // Create a tourney of numRounds where each round has numTables of two teams and two players per team
+    while(tourney.Rounds.length < ti.NumRounds) {
+       let round: Round = {
         Tables: [],
+        ByePlayers: [],
         UsedPlayers: new Set()
+       }
+        while (round.Tables.length < ti.NumTables) {
+            let table: Table = {
+                Teams: []
+            }
+            while(table.Teams.length < teamsPerTable) {
+                let team: number[] = []
+                team = selectTeam(ti.NumPlayers, playerByesDesc, usedPartners, round.UsedPlayers)
+                team.sort()
+                // If we are unable to select a team, we must be out of usable partner
+                // combinations. Add the current round to the tourney if any tables have
+                // already been seated and return the tourney
+                if (team.length == 0) {
+                    if (round.Tables.length > 0) {
+                        round.ByePlayers = getUnusedPlayers(ti.NumPlayers, round.UsedPlayers)
+                        for (let player of round.ByePlayers) {
+                            tourney.Byes[player] = tourney.Byes[player] + 1
+                        }
+                        tourney.Rounds.push(round)
+                    }
+                    if (table.Teams.length > 0) {
+                        for (let player of table.Teams[0]) {
+                            round.UsedPlayers.delete(player)
+                        }
+                    }
+                    return tourney
+                }
+                table.Teams.push(team)
+            }
+            round.Tables.push(table)
+        }
+        round.ByePlayers = getUnusedPlayers(ti.NumPlayers, round.UsedPlayers)
+        for (let player of round.ByePlayers) {
+            tourney.Byes[player] = tourney.Byes[player] + 1
+        }
+
+        // Sort the player ID array by byes where players with smaller numbers of byes
+        // are first in line to be selected for a team
+        playerByesDesc.sort(function(a: number, b: number): number {
+            if (tourney.Byes[a] < tourney.Byes[b]) {
+                return 1
+            } else if (tourney.Byes[a] > tourney.Byes[b]) {
+                return -1
+            } else {
+                return 0
+            }
+        })
+
+        tourney.Rounds.push(round)
     }
-    let table: Table = {
-        Teams: []
-    }
-    if (!seatTeams(gi, gd, table, round, game)) {
-        //console.log("Error - failed to create rounds")
-    }
-
-    return game
-}
-
-
-export function Run() {
-    let inputs: GameInputs = {
-        NumPlayers: 28,
-        PlayersPerTeam: 2,
-        TeamsPerTable: 2
-    }
-    let data = genGameData(inputs, GenCombinations(inputs))
-
-    console.log(inputs, data)
-
-    let rounds = GenRounds(inputs, data)
-    console.log(rounds)
+    return tourney
 }

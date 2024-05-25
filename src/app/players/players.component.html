@@ -1,11 +1,20 @@
-<p>Enter players below:</p>
-<form [formGroup]="addPlayersForm" (submit)="addPlayers()">
-    <input id="name" type-="text" formControlName="name">
-    <button type="submit" class="primary">Add Player</button>
-</form>
-<br>
-<button type="submit" class="primary" (click)="runTest()">Generate Games</button>
-<br>
-<ul>
-    <li *ngFor="let name of namesList; index as i">{{i}} {{name}}</li>
-</ul>
+<section class="p-5 container font-mono md:w-5/6 lg:w-2/3 xl:w-1/2">
+    <p>Enter players below:</p>
+    <form class="py-2" [formGroup]="addPlayersForm" (submit)="addPlayer()">
+        <input class="px-2 outline outline-2 rounded-md" id="name" type="text" formControlName="name">
+        <button class="mx-5 px-2 outline outline-2 bg-stone-300 hover:bg-stone-400 active:bg-stone-500" type="submit">Add</button>
+    </form>
+    <button class="my-5 w-full p-3 outline outline-2 bg-green-300 hover:bg-green-400 active:bg-green-500" type="submit" (click)="finishedAddingPlayers()">Start Tournament</button>
+    <h2 class="text-lg font-semibold">Players: {{players.length}}</h2>
+    <ul class="my-2">
+        <li class="flex flex-row" *ngFor="let name of players; index as i">
+            <button class="align-middle" (click)="removePlayer(i)">
+                <svg class="w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 22 22">
+                    <title>remove-circle</title>
+                    <path d="M21 7V15H20V17H19V18H18V19H17V20H15V21H7V20H5V19H4V18H3V17H2V15H1V7H2V5H3V4H4V3H5V2H7V1H15V2H17V3H18V4H19V5H20V7H21M17 6V5H16V4H14V3H8V4H6V5H5V6H4V8H3V14H4V16H5V17H6V18H8V19H14V18H16V17H17V16H18V14H19V8H18V6H17M14 7V8H15V9H14V10H13V12H14V13H15V14H14V15H13V14H12V13H10V14H9V15H8V14H7V13H8V12H9V10H8V9H7V8H8V7H9V8H10V9H12V8H13V7H14Z" />
+                </svg>
+            </button>
+            <p class="ml-4">{{name}}</p>
+        </li>
+    </ul>
+</section>
