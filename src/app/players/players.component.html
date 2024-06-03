@@ -2,7 +2,7 @@
     <p>A whist tournament is a round-robin style tournament where the team a player is on changes each round. Each player will partner with each player once, and oppose each player twice.</p>
     <br>
     <p>Enter players below:</p>
-    <form class="py-2" [formGroup]="addPlayersForm" (submit)="addPlayer()">
+    <form class="py-2 flex" [formGroup]="addPlayersForm" (submit)="addPlayer()">
         <input class="px-2 outline outline-2 rounded-md" id="name" type="text" formControlName="name">
         <button class="mx-5 px-2 outline outline-2 bg-stone-300 hover:bg-stone-400 active:bg-stone-500" type="submit">Add</button>
     </form>
