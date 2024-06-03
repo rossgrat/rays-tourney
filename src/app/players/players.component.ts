@@ -17,13 +17,13 @@ export class PlayersComponent {
   @Input() existingPlayers: string[] = []
   @Output() sendPlayers = new EventEmitter<string[]>()
 
-  players: string[] = []
+  players: string[] = [  ]
   addPlayersForm = new FormGroup({
     name: new FormControl('')
   })
 
   ngOnInit() {
-    this.players = this.existingPlayers
+    //this.players = this.existingPlayers
   }
 
   addPlayer() {

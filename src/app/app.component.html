@@ -7,14 +7,14 @@
   <section>
     <app-players 
       *ngIf="showAddPlayers"
-      [existingPlayers]="players"
+      [existingPlayers]="playerNames"
       (sendPlayers)="onReceivedPlayers($event)"
     >
     </app-players>
     <app-tourney 
       *ngIf="!showAddPlayers"
       [tourney]="tourney"
-      [players]="players"
+      [playerNames]="playerNames"
       (sendRestart)="onRecievedRestart($event)"
     >
     </app-tourney>

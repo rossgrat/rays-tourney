@@ -1,168 +1,87 @@
-export interface Table {
-    Teams: number[][] // [Team][Player]
+import {
+    startRounds
+} from './start-rounds'
+
+export interface AllBlocks {
+    blocks: Block[]
 }
 
-export interface Round {
-    ByePlayers: number[]
-    UsedPlayers: Set<number>
-    Tables: Table[]
+export interface Block {
+    numPlayers: number
+    startRound: Round
 }
 
 export interface Tourney {
-    Rounds: Round[]
-    Byes: number[]
+    rounds: Round[]
 }
 
-export interface TourneyInputs {
-    NumPlayers: number
-    NumRounds: number
-    NumTables: number
-    Mode: GameMode
+export interface Round {
+    tables: Table[]
 }
 
-export enum GameMode {
-    Custom = 1,
-    MaxRounds,
-    EqualByes,
+export interface Table {
+    teams: Team[]
 }
 
-// Attempt to find the first player and partner combination where
-// 1. The partner is not the player
-// 2. The player and partner have not yet been on a team togetther
-// 3. The player and partner are not already on some other team in the round
-//
-// Iterate over the array of ordered players when attempting to seat a player
-// and their partner.
-function selectTeam(numPlayers: number, orderedPlayers: number[], usedPartners: Set<number>[], usedPlayers: Set<number>): number[] {
-    for (let player of orderedPlayers) {
-        if ((!usedPlayers.has(player)) && (usedPartners[player].size < numPlayers)) {
-            for (let partner of orderedPlayers) {
-                if ((player != partner) && !usedPartners[player].has(partner) && !usedPlayers.has(partner)) {
-                    usedPartners[player].add(partner)
-                    usedPartners[partner].add(player)
-                    usedPlayers.add(player)
-                    usedPlayers.add(partner)
-                    return [player, partner]
-                }
-            }
+export interface Team {
+    players: number[]
+}
+
+var Blocks: AllBlocks
+export function ParseStartBlocks () {
+    Blocks = JSON.parse(startRounds)
+}
+
+export function GenerateTouurnament(numPlayers: number): Tourney {
+    let startBlock: Block = {
+        numPlayers: -1,
+        startRound: {
+            tables: []
         }
     }
-    return []
-}
-
-function getUnusedPlayers(numPlayers: number, usedPlayers: Set<number>): number[] {
-    let arr : number[] = []
-    for (let i = 0; i < numPlayers; i ++) {
-        if (!usedPlayers.has(i)) {
-            arr.push(i)
-        }
-    }
-    return arr
-}
-
-
-export function CreateTourney(ti: TourneyInputs): Tourney {
-    // A minimum of 4 players are required for euchre
-    if (ti.NumPlayers < 4) {
-        let empty: Tourney = {
-            Rounds: [],
-            Byes: []
-        }
-        return empty
-    }
-    // Create a set for each player of other players they have partnered with
-    let usedPartners: Set<number>[] = []
-    for (let i = 0; i < ti.NumPlayers; i ++) {
-        usedPartners.push(new Set())
-    }
-
-    const playersPerTeam = 2 
-    const teamsPerTable = 2
-
-    // We currently recognize two game modes
-    // MaxRounds: Generate the maximum number of rounds using the maximum number of tables
-    // Custom: Use inputs for numRounds and numTables to generate rounds
-    switch (ti.Mode) {
-        case GameMode.MaxRounds:
-            ti.NumTables = Math.floor(ti.NumPlayers / (playersPerTeam * teamsPerTable))
-            ti.NumRounds = Number.MAX_SAFE_INTEGER
-            break
-            
-        case GameMode.Custom:
-            if (ti.NumRounds === -1) {
-                ti.NumRounds = Number.MAX_SAFE_INTEGER
-            }
-            if (ti.NumTables === -1) {
-                ti.NumTables = Math.floor(ti.NumPlayers / (playersPerTeam * teamsPerTable))
-            }
-            break
-    }
-
-    // Create an array of all player IDs
-    let playerByesDesc: number[] = []
-    for(let i = 0; i < ti.NumPlayers; i++) {
-        playerByesDesc[i] = i
-    }
-
     let tourney: Tourney = {
-        Rounds: [],
-        Byes: new Array(ti.NumPlayers).fill(0)
+        rounds: []
     }
-    // Create a tourney of numRounds where each round has numTables of two teams and two players per team
-    while(tourney.Rounds.length < ti.NumRounds) {
-       let round: Round = {
-        Tables: [],
-        ByePlayers: [],
-        UsedPlayers: new Set()
-       }
-        while (round.Tables.length < ti.NumTables) {
-            let table: Table = {
-                Teams: []
+
+    for(let block of Blocks.blocks) {
+        if (block.numPlayers === numPlayers) {
+            startBlock = block
+            break
+        }
+    }
+    if (startBlock.numPlayers === -1) {
+        console.log("Failed to find starting block for "+numPlayers+" players")
+        return tourney
+    }
+    tourney.rounds.push(startBlock.startRound)
+
+    for (let roundNum = 1; roundNum < numPlayers - 1; roundNum++) {
+        let previousRound = tourney.rounds[tourney.rounds.length - 1]
+        let newRound: Round = {
+            tables: []
+        }
+        for (let tableNum = 0; tableNum < previousRound.tables.length; tableNum++) {
+            let newTable: Table = {
+                teams: []
             }
-            while(table.Teams.length < teamsPerTable) {
-                let team: number[] = []
-                team = selectTeam(ti.NumPlayers, playerByesDesc, usedPartners, round.UsedPlayers)
-                team.sort()
-                // If we are unable to select a team, we must be out of usable partner
-                // combinations. Add the current round to the tourney if any tables have
-                // already been seated and return the tourney
-                if (team.length == 0) {
-                    if (round.Tables.length > 0) {
-                        round.ByePlayers = getUnusedPlayers(ti.NumPlayers, round.UsedPlayers)
-                        for (let player of round.ByePlayers) {
-                            tourney.Byes[player] = tourney.Byes[player] + 1
-                        }
-                        tourney.Rounds.push(round)
-                    }
-                    if (table.Teams.length > 0) {
-                        for (let player of table.Teams[0]) {
-                            round.UsedPlayers.delete(player)
-                        }
-                    }
-                    return tourney
+            for (let teamNum = 0; teamNum < 2; teamNum++) {
+                let newTeam: Team = {
+                    players: []
                 }
-                table.Teams.push(team)
+                for(let playerNum = 0; playerNum < 2; playerNum++) {
+                    let previousPlayer = previousRound.tables[tableNum].teams[teamNum].players[playerNum]
+                    if (previousPlayer < numPlayers - 1) {
+                        newTeam.players.push((previousPlayer + 1) % (numPlayers - 1))
+                    } else {
+                        newTeam.players.push(previousPlayer)
+                    }
+                }
+                newTable.teams.push(newTeam)
             }
-            round.Tables.push(table)
+            newRound.tables.push(newTable)
         }
-        round.ByePlayers = getUnusedPlayers(ti.NumPlayers, round.UsedPlayers)
-        for (let player of round.ByePlayers) {
-            tourney.Byes[player] = tourney.Byes[player] + 1
-        }
-
-        // Sort the player ID array by byes where players with smaller numbers of byes
-        // are first in line to be selected for a team
-        playerByesDesc.sort(function(a: number, b: number): number {
-            if (tourney.Byes[a] < tourney.Byes[b]) {
-                return 1
-            } else if (tourney.Byes[a] > tourney.Byes[b]) {
-                return -1
-            } else {
-                return 0
-            }
-        })
-
-        tourney.Rounds.push(round)
+        tourney.rounds.push(newRound)
     }
+    console.log(tourney)
     return tourney
 }

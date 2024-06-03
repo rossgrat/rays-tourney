@@ -5,9 +5,8 @@ import { PlayersComponent } from './players/players.component'
 import { TourneyComponent } from './tourney/tourney.component';
 import {
   Tourney, 
-  TourneyInputs,
-  CreateTourney,
-  GameMode
+  GenerateTouurnament,
+  ParseStartBlocks
 } from './tourney-engine'
 
 @Component({
@@ -26,28 +25,30 @@ export class AppComponent {
   title = 'Euchre Tournament Generator';
 
   showAddPlayers = true
-  players: string[] = []
+  playerNames: string[] = []
   tourney: Tourney= {
-    Rounds: [],
-    Byes: []
+    rounds: []
+  }
+
+  ngOnInit() {
+    ParseStartBlocks()
   }
 
   onReceivedPlayers(receivedPlayers: string[]) {
-    this.players = receivedPlayers
-    let ti:TourneyInputs = {
-      NumPlayers: this.players.length,
-      NumRounds: -1,
-      NumTables: -1,
-      Mode: GameMode.MaxRounds
+    this.playerNames = receivedPlayers
+    if (this.playerNames.length % 4 === 0) {
+      this.tourney = GenerateTouurnament(this.playerNames.length)
+    } else {
+      this.tourney = {
+        rounds: []
+      }
     }
-    this.tourney = CreateTourney(ti)
     this.showAddPlayers = !this.showAddPlayers
   }
 
   onRecievedRestart(start: boolean ) {
     this.tourney = {
-      Rounds: [],
-      Byes: []
+      rounds: []
     }
     this.showAddPlayers = !this.showAddPlayers
   }

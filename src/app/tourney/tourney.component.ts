@@ -17,23 +17,16 @@ import { CommonModule } from '@angular/common'
 })
 export class TourneyComponent {
   @Output() sendRestart = new EventEmitter<boolean>()
-  @Input() players: string[] = [];
+  @Input() playerNames: string[] = [];
   @Input() tourney: Tourney = {
-    Rounds: [],
-    Byes: []
+    rounds: []
   }
 
   notEnoughPlayers = false
 
-  ngOnInit(){
-    console.log(this.players)
-    console.log(this.tourney)
-  }
-
   endTournament() {
     this.tourney =  {
-      Rounds: [],
-      Byes: []
+      rounds: []
     }
     this.sendRestart.emit(true)
   }
