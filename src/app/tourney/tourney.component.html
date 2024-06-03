@@ -1,7 +1,7 @@
 <section class="p-2 container font-mono md:w-5/6 lg:w-2/3 xl:w-1/2">
     <p  *ngIf="tourney.rounds.length === 0">The number of players in your tournament must be multiple of 4 to start, ex: 4, 8, 12, etc.</p>    
     <div class="my-4"*ngFor="let round of tourney.rounds; index as r">
-        <h2 class="text-lg font-semibold">Round {{r}}</h2>
+        <h2 class="text-lg font-semibold">Round {{r + 1}}</h2>
         <div class="flex flex-col">
             <div class="outline outline-2 rounded grid grid-cols-7 my-2" *ngFor="let table of round.tables">
                 <div class="mx-2 col-span-3">

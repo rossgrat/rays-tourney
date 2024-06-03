@@ -23,10 +23,14 @@ export class PlayersComponent {
   })
 
   ngOnInit() {
-    //this.players = this.existingPlayers
+    this.players = this.existingPlayers
   }
 
   addPlayer() {
+    if (this.players.length === 100) {
+      alert("Maximum of 100 players allowed.")
+      return
+    }
     let newName = this.addPlayersForm.value.name
     if (newName === undefined || newName === null || newName === "") {
       newName = "New Player"

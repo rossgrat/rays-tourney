@@ -1,11 +1,15 @@
 <section class="p-5 container font-mono md:w-5/6 lg:w-2/3 xl:w-1/2">
+    <p>A whist tournament is a round-robin style tournament where the team a player is on changes each round. Each player will partner with each player once, and oppose each player twice.</p>
+    <br>
     <p>Enter players below:</p>
     <form class="py-2" [formGroup]="addPlayersForm" (submit)="addPlayer()">
         <input class="px-2 outline outline-2 rounded-md" id="name" type="text" formControlName="name">
         <button class="mx-5 px-2 outline outline-2 bg-stone-300 hover:bg-stone-400 active:bg-stone-500" type="submit">Add</button>
     </form>
     <button class="my-5 w-full p-3 outline outline-2 bg-green-300 hover:bg-green-400 active:bg-green-500" type="submit" (click)="finishedAddingPlayers()">Start Tournament</button>
-    <h2 class="text-lg font-semibold">Players: {{players.length}}</h2>
+    <span class="text-lg font-semibold">Players: </span>
+    <span *ngIf="players.length % 4 === 0 && players.length > 0" class="text-lg font-semibold text-green-500">{{players.length}}</span>
+    <span *ngIf="players.length % 4 !== 0 || players.length === 0" class="text-lg font-semibold text-red-500">{{players.length}}</span>
     <ul class="my-2">
         <li class="flex flex-row" *ngFor="let name of players; index as i">
             <button class="align-middle" (click)="removePlayer(i)">
