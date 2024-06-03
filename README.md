@@ -15,6 +15,10 @@ Useful resources:
 
 Visit ross.grattafiori.dev/wtm to verify deployment
 
+## Resouces
+[Durango Bill's Whist Starting Blocks](https://www.durangobill.com/BridgeCyclicSolutions.html)
+[Richard Devenzia's Whist Tables](https://www.devenezia.com/downloads/round-robin/index.html)
+
 ## Future Ideas
 * Multipeer connectivity and scoring
     * Users connect to a game, similar to kahoot then enter their scores after each game, app automatically keeps track of a leaderboard
